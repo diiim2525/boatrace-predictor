@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1424">
+<title>BOATRACE ANALYST</title>
+<style>
+:root{--bg:#0b1424;--panel:#142238;--panel2:#0f1c30;--line:#2b3e59;--text:#f3f6fb;--muted:#a8b6ca;--blue:#5aa7ff;--green:#35c48a;--amber:#f5bd58;--red:#ff7777}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#0b1424,#101d31 45%,#0b1424);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;font-size:15px;line-height:1.55}
+.wrap{max-width:900px;margin:auto;padding:18px 14px 48px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 2px 18px}.brand{font-size:12px;letter-spacing:.16em;color:#91a6c2;font-weight:800}.brand strong{display:block;font-size:23px;letter-spacing:.04em;color:white}.status{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:6px 10px;color:var(--muted);white-space:nowrap}.status.ok{color:var(--green);border-color:#28664f}.status.warn{color:var(--amber);border-color:#755a2a}
+.panel{background:rgba(20,34,56,.94);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 12px 32px #0002}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.section-head h2{font-size:17px;margin:0}.hint{font-size:12px;color:var(--muted)}
+.select-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}.field select,.field input{width:100%;padding:13px 12px;border-radius:11px;border:1px solid #425674;background:#0c1728;color:#fff;font-size:16px;min-height:48px}.race-pills{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:12px}.race-pills button{border:1px solid #3a4e6a;background:#0d192b;color:#cad7e8;border-radius:9px;padding:8px 0;font-weight:700}.race-pills button.active{background:#2465a9;border-color:#63b0ff;color:#fff}
+.meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.tag{background:#0d192b;color:#c5d3e5;border:1px solid #30445f;border-radius:7px;padding:5px 8px;font-size:12px}.notice{font-size:13px;color:var(--muted);padding:10px 12px;background:#0d192b;border-radius:10px;margin-top:12px}.notice.error{color:#ffb5b5;border:1px solid #74414a}.notice.good{color:#a3ebce;border:1px solid #28664f}
+.tabs{display:flex;overflow:auto;gap:7px;padding:3px 0 10px;scrollbar-width:none}.tabs button{flex:0 0 auto;background:#0d192b;border:1px solid var(--line);border-radius:999px;color:#c1cede;padding:9px 15px;font-weight:700}.tabs button.active{background:#eaf3ff;color:#17385e;border-color:#eaf3ff}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:620px;background:#0f1b2d}th,td{text-align:center;padding:11px 9px;border-bottom:1px solid #263952;font-size:13px;white-space:nowrap}th{background:#1b2c44;color:#bdcce0;font-weight:700}td.name{text-align:left;font-weight:700}tr:last-child td{border-bottom:0}.lane{font-size:17px;font-weight:900;width:42px}.lane-1{background:#f5f6f8;color:#1e2a39}.lane-2{background:#222b37;color:#fff}.lane-3{background:#e34c4c;color:white}.lane-4{background:#397be8;color:white}.lane-5{background:#f3d44f;color:#263142}.lane-6{background:#2d9a69;color:white}
+.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.info{background:#0d192b;border:1px solid #293e59;border-radius:11px;padding:11px}.info .k{font-size:11px;color:var(--muted)}.info .v{font-size:18px;font-weight:800;margin-top:3px}.empty{padding:22px 14px;text-align:center;color:var(--muted);background:#0d192b;border:1px dashed #405471;border-radius:12px}.small{font-size:11px;color:var(--muted)}.footer{font-size:11px;color:#8394ab;text-align:center;padding:16px 8px 0}.hidden{display:none!important}
+@media(min-width:650px){.wrap{padding:26px 22px 50px}.info-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.panel{padding:20px}.brand strong{font-size:27px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="brand">RACE INTELLIGENCE<strong>BOATRACE ANALYST</strong></div><div id="connection" class="status">データ確認中</div></header>
+<section class="panel">
+ <div class="section-head"><h2>レースを選ぶ</h2><span class="hint" id="updated">更新時刻：未取得</span></div>
+ <div class="select-grid">
+  <div class="field"><label for="stadium">競艇場</label><select id="stadium"><option value="">読み込み中...</option></select></div>
+  <div class="field"><label for="raceNo">レース</label><select id="raceNo"><option value="">--</option></select></div>
+ </div>
+ <div class="race-pills" id="racePills" aria-label="レース番号"></div>
+ <div class="meta" id="raceMeta"></div>
+ <div id="loadMessage" class="notice">データを読み込んでいます。</div>
+</section>
+<section class="panel">
+ <div class="tabs" role="tablist">
+  <button class="active" data-tab="entries">出走表</button><button data-tab="preview">直前情報</button><button data-tab="result">レース結果</button><button data-tab="check">データ確認</button>
+ </div>
+ <div id="tab-entries"><div class="section-head"><h2>出走メンバー</h2><span class="hint" id="entryCount">--</span></div><div id="entriesContent" class="empty">レースを選択してください。</div></div>
+ <div id="tab-preview" class="hidden"><div class="section-head"><h2>直前情報</h2><span class="hint">展示・気象</span></div><div id="previewContent" class="empty">直前情報はまだありません。</div></div>
+ <div id="tab-result" class="hidden"><div class="section-head"><h2>レース結果</h2><span class="hint">着順・払戻</span></div><div id="resultContent" class="empty">レース結果はまだありません。</div></div>
+ <div id="tab-check" class="hidden"><div class="section-head"><h2>データ診断</h2><span class="hint">欠損を隠さず表示</span></div><div id="checkContent" class="empty">診断待ち</div></div>
+</section>
+<div class="footer">データ提供：Boatrace Open API（非公式）／表示内容は取得データに基づきます。公式情報も必ず確認してください。</div>
+</div>
+<script>
+(() => {
+'use strict';
+const API_PATH = './data/today.json';
+const stadiumNames = {1:'桐生',2:'戸田',3:'江戸川',4:'平和島',5:'多摩川',6:'浜名湖',7:'蒲郡',8:'常滑',9:'津',10:'三国',11:'びわこ',12:'住之江',13:'尼崎',14:'鳴門',15:'丸亀',16:'児島',17:'宮島',18:'徳山',19:'下関',20:'若松',21:'芦屋',22:'福岡',23:'唐津',24:'大村'};
+const $ = id => document.getElementById(id);
+let dataset = null, currentRace = null;
+const text = v => (v === null || v === undefined || v === '' ? '—' : String(v));
+const num = (v, digits=2) => (typeof v === 'number' && Number.isFinite(v) ? v.toFixed(digits) : text(v));
+const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function getStadiums(data){return data?.programs?.stadiums || data?.stadiums || {};}
+function getEntryMap(race){return race?.racers || race?.races || race?.entries || {};}
+function getPreviewMap(race){return race?.preview?.racers || race?.preview?.races || race?.preview?.entries || {};}
+function getResultMap(race){return race?.result?.racers || race?.result?.races || race?.result?.entries || {};}
+function setMessage(message, kind=''){const el=$('loadMessage');el.textContent=message;el.className='notice '+kind;}
+function fillStadiums(){const map=getStadiums(dataset);const select=$('stadium');select.innerHTML='';Object.keys(map).sort((a,b)=>Number(a)-Number(b)).forEach(id=>{const o=document.createElement('option');o.value=id;o.textContent=stadiumNames[id] || `競艇場 ${id}`;select.appendChild(o);});if(!select.options.length){throw new Error('開催場データが見つかりません（programs.stadiums が空です）。');}select.value=select.options[0].value;fillRaces();}
+function fillRaces(){const races=getStadiums(dataset)[$('stadium').value]?.races || {};const select=$('raceNo');select.innerHTML='';const ids=Object.keys(races).sort((a,b)=>Number(a)-Number(b));ids.forEach(id=>{const o=document.createElement('option');o.value=id;o.textContent=`${id}R`;select.appendChild(o);});const pills=$('racePills');pills.innerHTML='';for(let n=1;n<=12;n++){const b=document.createElement('button');b.type='button';b.textContent=`${n}R`;b.dataset.race=String(n);b.addEventListener('click',()=>{if([...select.options].some(o=>o.value===String(n))){select.value=String(n);renderRace();}});pills.appendChild(b);}if(ids.length){select.value=ids[0];renderRace();}else{showNoRace();}}
+function showNoRace(){currentRace=null;$('entriesContent').className='empty';$('entriesContent').textContent='この競艇場のレースデータはありません。';$('entryCount').textContent='0艇';$('raceMeta').innerHTML='';}
+function renderRace(){const stadiumId=$('stadium').value,raceId=$('raceNo').value;const races=getStadiums(dataset)[stadiumId]?.races || {};const race=races[raceId];if(!race){showNoRace();return;}currentRace=race;document.querySelectorAll('#racePills button').forEach(b=>b.classList.toggle('active',b.dataset.race===raceId));$('raceMeta').innerHTML=[race.title,race.subtitle,race.date, race.grade_number_source || race.grade_number ? `グレード ${text(race.grade_number_source ?? race.grade_number)}` : '',race.distance?`${race.distance}m`:'',race.day_number?`${race.day_number}日目`:'' ].filter(Boolean).map(x=>`<span class="tag">${escapeHtml(x)}</span>`).join('');renderEntries(race);renderPreview(race);renderResult(race);renderCheck(race);}
+function renderEntries(race){const map=getEntryMap(race);const rows=Object.entries(map).sort((a,b)=>Number(a[0])-Number(b[0]));$('entryCount').textContent=`${rows.length}艇`;
+ if(!rows.length){$('entriesContent').className='empty';$('entriesContent').textContent='出走選手データがありません。データ形式を確認してください。';return;}
+ const body=rows.map(([key,p])=>{const lane=Number(p.entry_number??key);const laneClass=lane>=1&&lane<=6?`lane-${lane}`:'';return `<tr><td class="lane ${laneClass}">${escapeHtml(text(p.entry_number??key))}</td><td class="name">${escapeHtml(text(p.name))}<div class="small">登録 ${escapeHtml(text(p.number))}</div></td><td>${escapeHtml(text(p.rank_number_source??p.rank_number))}</td><td>${escapeHtml(num(p.national_win_rate))}</td><td>${escapeHtml(num(p.local_win_rate))}</td><td>${escapeHtml(num(p.average_start_timing,2))}</td><td>${escapeHtml(text(p.motor_number))}</td><td>${escapeHtml(num(p.motor_top_2_percent))}%</td></tr>`;}).join('');
+ $('entriesContent').className='table-wrap';$('entriesContent').innerHTML=`<table><thead><tr><th>艇</th><th>選手</th><th>級別</th><th>全国勝率</th><th>当地勝率</th><th>平均ST</th><th>モーター</th><th>モーター2連率</th></tr></thead><tbody>${body}</tbody></table>`;}
+function cards(items){return `<div class="info-grid">${items.map(([k,v])=>`<div class="info"><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(text(v))}</div></div>`).join('')}</div>`;}
+function renderPreview(race){const p=race.preview;if(!p){$('previewContent').className='empty';$('previewContent').textContent='直前情報はまだ取得されていません。';return;}const racers=getPreviewMap(race);const rows=Object.entries(racers).sort((a,b)=>Number(a[0])-Number(b[0]));const items=[['風速',p.wind_speed==null?'—':`${p.wind_speed} m/s`],['風向コード',p.wind_direction_number],['波高',p.wave_height==null?'—':`${p.wave_height} cm`],['気温',p.air_temperature==null?'—':`${p.air_temperature} ℃`],['水温',p.water_temperature==null?'—':`${p.water_temperature} ℃`],['天候コード',p.weather_number]];$('previewContent').className='';$('previewContent').innerHTML=cards(items)+(rows.length?`<div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>艇</th><th>進入</th><th>展示ST</th><th>展示タイム</th><th>体重</th><th>チルト</th></tr></thead><tbody>${rows.map(([k,v])=>`<tr><td>${escapeHtml(text(v.entry_number??k))}</td><td>${escapeHtml(text(v.course_number))}</td><td>${escapeHtml(num(v.start_timing,2))}</td><td>${escapeHtml(num(v.exhibition_time,2))}</td><td>${escapeHtml(text(v.weight))}</td><td>${escapeHtml(text(v.tilt_adjustment))}</td></tr>`).join('')}</tbody></table></div>`:'<div class="notice">展示選手データはまだありません。</div>');}
+function renderResult(race){const r=race.result;if(!r){$('resultContent').className='empty';$('resultContent').textContent='レース結果はまだ取得されていません。';return;}const racers=getResultMap(race);const rows=Object.entries(racers).sort((a,b)=>Number(a[1].place_number??99)-Number(b[1].place_number??99));const payouts=r.payouts?.trifecta||[];$('resultContent').className='';$('resultContent').innerHTML=(rows.length?`<div class="table-wrap"><table><thead><tr><th>着順</th><th>艇</th><th>選手</th><th>進入</th><th>ST</th></tr></thead><tbody>${rows.map(([k,v])=>`<tr><td>${escapeHtml(text(v.place_number))}</td><td>${escapeHtml(text(v.entry_number??k))}</td><td>${escapeHtml(text(v.name))}</td><td>${escapeHtml(text(v.course_number))}</td><td>${escapeHtml(num(v.start_timing,2))}</td></tr>`).join('')}</tbody></table></div>`:'<div class="notice">着順データはありません。</div>')+(payouts.length?`<div class="notice good">3連単払戻：${payouts.map(x=>`${escapeHtml(text(x.combination))} ／ ${x.amount==null?'—':Number(x.amount).toLocaleString()+'円'}`).join('、')}</div>`:'');}
+function renderCheck(race){const map=getEntryMap(race),entries=Object.entries(map);const missing=[];if(entries.length!==6)missing.push(`出走選手が6艇ではありません（${entries.length}艇）`);entries.forEach(([k,p])=>{if(!p.name)missing.push(`${k}号艇：選手名なし`);if(p.national_win_rate==null)missing.push(`${k}号艇：全国勝率なし`);});const source=race.racers?'racers':race.races?'races':race.entries?'entries':'不明';const preview=!!race.preview,result=!!race.result;$('checkContent').className='';$('checkContent').innerHTML=`<div class="info-grid">${cards([['出走表形式',source],['取得艇数',`${entries.length}/6`],['直前情報',preview?'あり':'未取得'],['結果',result?'あり':'未取得']]).replace('class="info-grid"','class="info-grid"')}</div><div class="notice ${missing.length?'error':'good'}" style="margin-top:12px">${missing.length?missing.map(escapeHtml).join('<br>'):'出走表の基本チェックは通過しました。'} </div><p class="small">※直前情報・結果は、レース時刻に応じて後から追加されます。未取得は必ずしもエラーではありません。</p>`;}
+async function init(){try{setMessage('データを取得しています…');const response=await fetch(`${API_PATH}?_=${Date.now()}`,{cache:'no-store'});if(!response.ok)throw new Error(`data/today.json の取得に失敗しました（HTTP ${response.status}）。`);dataset=await response.json();if(!dataset||typeof dataset!=='object')throw new Error('JSONの形式が正しくありません。');fillStadiums();$('connection').textContent='データ接続済み';$('connection').className='status ok';$('updated').textContent=`取得：${new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}`;setMessage('データを読み込みました。開催場とレースを選択してください。','good');}catch(error){$('connection').textContent='データ未接続';$('connection').className='status warn';setMessage(error.message+' GitHub Actionsで data/today.json が存在するか確認してください。','error');$('entriesContent').className='empty';$('entriesContent').textContent='データを表示できません。';$('checkContent').className='empty';$('checkContent').textContent=error.message;}}
+$('stadium').addEventListener('change',fillRaces);$('raceNo').addEventListener('change',renderRace);
+document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b===button));['entries','preview','result','check'].forEach(key=>$(`tab-${key}`).classList.toggle('hidden',key!==button.dataset.tab));}));
+init();
+})();
+</script>
+</body>
+</html>
