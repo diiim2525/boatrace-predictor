@@ -1,0 +1,30 @@
+
+name: Fetch Boat Race Data
+
+on:
+  schedule:
+    - cron: "*/30 0-14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch today's data
+        run: |
+          mkdir -p data
+          curl -fsSL "https://boatraceopenapi.github.io/api/v1/today.json" -o data/today.json
+
+      - name: Save changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/today.json
+          git diff --cached --quiet || git commit -m "Update boat race data"
+          git push
