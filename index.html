@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BOATRACE ANALYST</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101722;color:#eef3fa;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:18px}
+header{padding:12px 0 22px;border-bottom:1px solid #344154}
+small{color:#91a4bd;letter-spacing:2px}
+h1{font-size:25px;margin:8px 0}
+h2{font-size:17px;margin:0 0 14px}
+.card{background:#1b2737;border:1px solid #344154;border-radius:14px;padding:16px;margin-top:16px}
+label{display:block;color:#aebed1;font-size:12px;margin:12px 0 6px}
+input,select,textarea{width:100%;background:#101722;color:white;border:1px solid #46566d;border-radius:8px;padding:11px;font-size:15px}
+textarea{min-height:75px;resize:vertical}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{padding:7px 4px;border-bottom:1px solid #344154;text-align:left}
+th{color:#9db0c8}
+button{background:#29a879;color:white;border:0;border-radius:9px;padding:13px;font-size:15px;font-weight:bold;width:100%;margin-top:12px}
+.secondary{background:#34445a}
+.result{background:#101722;border-radius:9px;padding:12px;margin-top:10px;line-height:1.8}
+.muted{color:#91a4bd;font-size:12px}
+.tag{color:#52d7a7}
+</style>
+</head>
+<body>
+<header>
+<small>BOATRACE DATA & ANALYSIS</small>
+<h1>BOATRACE ANALYST</h1>
+<div class="muted">予想・展開分析・成績管理</div>
+</header>
+
+<section class="card">
+<h2>01 / レース選択</h2>
+<div class="grid">
+<div>
+<label>競艇場</label>
+<select id="venue"></select>
+</div>
+<div>
+<label>レース番号</label>
+<select id="race"></select>
+</div>
+</div>
+<label>開催日</label>
+<input type="date" id="date">
+</section>
+
+<section class="card">
+<h2>02 / 出走データ</h2>
+<div class="muted">選手名・モーター・展示評価などを入力</div>
+<table>
+<thead><tr><th>艇</th><th>選手名</th><th>モーター</th><th>展示評価</th></tr></thead>
+<tbody id="boats"></tbody>
+</table>
+<label>スタート展示・進入・水面状況</label>
+<textarea id="condition" placeholder="例：4号艇の伸びが強い、3号艇スタート良好"></textarea>
+</section>
+
+<section class="card">
+<h2>03 / 展開予想</h2>
+<label>本命の展開</label>
+<select id="main">
+<option>1号艇の逃げ</option>
+<option>2号艇の差し</option>
+<option>3号艇のまくり</option>
+<option>4号艇のまくり</option>
+<option>まくり差し</option>
+<option>その他</option>
+</select>
+<label>展開の根拠</label>
+<textarea id="reason" placeholder="なぜこの展開になると考えたか"></textarea>
+<label>警戒する展開</label>
+<textarea id="risk" placeholder="本線が崩れる条件"></textarea>
+</section>
+
+<section class="card">
+<h2>04 / 3連単買い目</h2>
+<div class="muted">1着・2着・3着を選択してください</div>
+<div class="grid">
+<div><label>1着</label><input id="first" placeholder="例：3"></div>
+<div><label>2着</label><input id="second" placeholder="例：1,4"></div>
+<div><label>3着</label><input id="third" placeholder="例：1,2,4"></div>
+<div><label>購入金額（合計・円）</label><input id="money" type="number" placeholder="1000"></div>
+</div>
+<label>買い目の確認</label>
+<div id="tickets" class="result">買い目を入力してください</div>
+<button onclick="makeTickets()">買い目を作成</button>
+</section>
+
+<section class="card">
+<h2>05 / 結果・振り返り</h2>
+<label>実際の着順（1-2-3）</label>
+<input id="actual" placeholder="例：3-1-4">
+<label>払戻金（100円あたり・円）</label>
+<input id="payout" type="number" placeholder="例：2450">
+<button onclick="save()">このレースを保存</button>
+<div id="message" class="muted"></div>
+</section>
+
+<section class="card">
+<h2>06 / 予想成績</h2>
+<div id="stats" class="result">まだ記録がありません</div>
+<button class="secondary" onclick="showHistory()">保存したレースを見る</button>
+<div id="history"></div>
+</section>
+
+<script>
+const venues=["桐生","戸田","江戸川","平和島","多摩川","浜名湖","蒲郡","常滑","津","三国","びわこ","住之江","尼崎","鳴門","丸亀","児島","宮島","徳山","下関","若松","芦屋","福岡","唐津","大村"];
+const venue=document.getElementById("venue");
+venues.forEach(v=>venue.add(new Option(v,v)));
+const race=document.getElementById("race");
+for(let i=1;i<=12;i++)race.add(new Option(i+"R",i));
+document.getElementById("date").value=new Date().toLocaleDateString("sv-SE");
+
+const tbody=document.getElementById("boats");
+for(let i=1;i<=6;i++){
+const tr=document.createElement("tr");
+tr.innerHTML=`<td>${i}</td>
+<td><input id="name${i}" placeholder="選手名"></td>
+<td><input id="motor${i}" placeholder="番号"></td>
+<td><select id="eval${i}"><option>未評価</option><option>◎</option><option>○</option><option>△</option><option>×</option></select></td>`;
+tbody.appendChild(tr);
+}
+
+function makeTickets(){
+const a=document.getElementById("first").value.split(",").map(x=>x.trim()).filter(Boolean);
+const b=document.getElementById("second").value.split(",").map(x=>x.trim()).filter(Boolean);
+const c=document.getElementById("third").value.split(",").map(x=>x.trim()).filter(Boolean);
+let list=[];
+a.forEach(x=>b.forEach(y=>c.forEach(z=>{
+if(x!==y&&y!==z&&x!==z&&[x,y,z].every(n=>["1","2","3","4","5","6"].includes(n)))list.push(x+"-"+y+"-"+z);
+})));
+window.currentTickets=[...new Set(list)];
+document.getElementById("tickets").innerHTML=window.currentTickets.length?window.currentTickets.join("<br>")+"<br><b>合計 "+window.currentTickets.length+" 点</b>":"有効な買い目を入力してください";
+}
+
+function getData(){
+let boats=[];
+for(let i=1;i<=6;i++)boats.push({
+lane:i,name:document.getElementById("name"+i).value,
+motor:document.getElementById("motor"+i).value,
+evaluation:document.getElementById("eval"+i).value
+});
+return {
+venue:venue.value,race:race.value,date:document.getElementById("date").value,
+boats,condition:document.getElementById("condition").value,
+main:document.getElementById("main").value,
+reason:document.getElementById("reason").value,
+risk:document.getElementById("risk").value,
+tickets:window.currentTickets||[],
+money:Number(document.getElementById("money").value)||0,
+actual:document.getElementById("actual").value.trim(),
+payout:Number(document.getElementById("payout").value)||0
+};
+}
+
+function save(){
+const d=getData();
+if(!d.tickets.length){alert("先に買い目を作成してください");return;}
+let history=JSON.parse(localStorage.getItem("boatHistory")||"[]");
+history.unshift(d);
+localStorage.setItem("boatHistory",JSON.stringify(history));
+document.getElementById("message").textContent="保存しました！";
+showStats();
+}
+
+function showStats(){
+let h=JSON.parse(localStorage.getItem("boatHistory")||"[]");
+let total=h.reduce((s,x)=>s+x.money,0);
+let hit=h.filter(x=>x.actual&&x.tickets.includes(x.actual)).length;
+let returned=h.reduce((s,x)=>s+(x.actual&&x.tickets.includes(x.actual)?x.payout:0),0);
+document.getElementById("stats").innerHTML=
+"記録数："+h.length+" レース<br>"+
+"的中数："+hit+" レース<br>"+
+"的中率："+(h.length?(hit/h.length*100).toFixed(1):0)+"%<br>"+
+"購入金額："+total.toLocaleString()+"円<br>"+
+"払戻金："+returned.toLocaleString()+"円<br>"+
+"回収率："+(total?(returned/total*100).toFixed(1):0)+"%";
+}
+
+function showHistory(){
+let h=JSON.parse(localStorage.getItem("boatHistory")||"[]");
+document.getElementById("history").innerHTML=h.length?h.map(x=>
+`<div class="result">${x.date} ${x.venue} ${x.race}R<br>
+展開：${x.main}<br>買い目：${x.tickets.join(" / ")}<br>
+結果：${x.actual||"未入力"}</div>`).join(""):"記録はありません";
+}
+showStats();
+</script>
+</body>
+</html>
