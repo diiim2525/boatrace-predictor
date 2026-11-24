@@ -215,32 +215,38 @@ function showRace(){
  currentRace=race;
  document.getElementById("raceDate").value=race.date || "";
 
- const boats=race.races || {};
- const tbody=document.getElementById("raceTable");
- tbody.innerHTML="";
+const boats = race.races || {};
+const tbody = document.getElementById("raceTable");
+tbody.innerHTML = "";
 
- Object.keys(boats).sort((a,b)=>Number(a)-Number(b)).forEach(key=>{
-  const b=boats[key];
-  const tr=document.createElement("tr");
+const entries = Object.entries(boats)
+  .sort((a, b) => Number(a[0]) - Number(b[0]));
 
-  const values=[
-   b.entry_number ?? key,
-   b.name || "不明",
-   b.rank_number_source || "-",
-   b.national_win_rate ?? "-",
-   b.motor_number ?? "-",
-   b.motor_top_2_percent ?? "-"
-  ];
+if (entries.length === 0) {
+  tbody.innerHTML =
+    '<tr><td colspan="6">出走データがありません</td></tr>';
+} else {
+  entries.forEach(([key, boat]) => {
+    const tr = document.createElement("tr");
 
-  values.forEach((value,index)=>{
-   const td=document.createElement("td");
-   td.textContent=value;
-   if(index===0)td.className="boat";
-   tr.appendChild(td);
-  });
+    const values = [
+      boat.entry_number ?? key,
+      boat.name || "不明",
+      boat.rank_number_source || "-",
+      boat.national_win_rate ?? "-",
+      boat.motor_number ?? "-",
+      boat.motor_top_2_percent ?? "-"
+    ];
 
-  tbody.appendChild(tr);
- });
+    values.forEach((value, index) => {
+      const td = document.createElement("td");
+      td.textContent = value;
+      if (index === 0) td.className = "boat";
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  
 
  document.getElementById("raceInfo").innerHTML=
   "競艇場："+stadiumNames[stadium.value]+"<br>"+
