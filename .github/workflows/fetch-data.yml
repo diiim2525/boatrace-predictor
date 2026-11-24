@@ -2,6 +2,7 @@
 name: Fetch Boat Race Data
 
 on:
+  push:
   schedule:
     - cron: "*/30 0-14 * * *"
   workflow_dispatch:
