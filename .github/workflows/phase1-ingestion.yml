@@ -1,0 +1,49 @@
+name: BOATRACE ANALYST Phase 1
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: Target date in Japan local calendar (YYYY-MM-DD); blank uses today's Japan date
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-ingest:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: src
+      PYTHONDONTWRITEBYTECODE: "1"
+      DATABASE_URL: ""
+      PHASE1_DB_WRITE_ENABLED: "false"
+      PHASE1_TARGET_DATE: ${{ inputs.target_date }}
+      PHASE1_LOCAL_HISTORY_PATH: ${{ runner.temp }}/phase1-output/history.ndjson
+    steps:
+      - name: Check out selected ref
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Prepare temporary output
+        run: mkdir -p "$RUNNER_TEMP/phase1-output"
+
+      - name: Run local tests with mocked HTTP
+        run: python -m unittest discover -s tests -v
+
+      - name: Fetch and validate selected target date
+        run: python -m boatrace_analyst.cli run --target-date "$PHASE1_TARGET_DATE"
+
+      - name: Upload run report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-run-${{ github.run_id }}
+          path: ${{ runner.temp }}/phase1-output
+          if-no-files-found: warn
+          retention-days: 30
